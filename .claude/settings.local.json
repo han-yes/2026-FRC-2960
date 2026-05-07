@@ -11,7 +11,14 @@
       "Bash(gh api *)",
       "WebFetch(domain:v6.docs.ctr-electronics.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Claude and any agent has full access to the web"
+      "Claude and any agent has full access to the web",
+      "PowerShell(${env:HALSIM_EXTENSIONS}=''; ${env:PATH}='C:\\\\Users\\\\hangy\\\\Documents\\\\2026-FRC-2960-1\\\\build\\\\jni\\\\release;C:\\\\WINDOWS\\\\system32\\\\'; ${env:FRC_AUTON_HEADLESS}='1'; & 'C:\\\\Users\\\\Public\\\\wpilib\\\\2026\\\\jdk\\\\bin\\\\java.exe' '-agentlib:jdwp=transport=dt_socket,server=n,suspend=y,address=localhost:53338' '@C:\\\\Users\\\\hangy\\\\AppData\\\\Local\\\\Temp\\\\cp_474xt8gszb03h61i7w6cr8enr.argfile' 'frc.robot.Main')",
+      "PowerShell(${env:HALSIM_EXTENSIONS}=''; ${env:PATH}='C:\\\\Users\\\\hangy\\\\Documents\\\\2026-FRC-2960-1\\\\build\\\\jni\\\\release;C:\\\\WINDOWS\\\\system32\\\\'; ${env:FRC_AUTON_HEADLESS}='1'; & 'C:\\\\Users\\\\Public\\\\wpilib\\\\2026\\\\jdk\\\\bin\\\\java.exe' '@C:\\\\Users\\\\hangy\\\\AppData\\\\Local\\\\Temp\\\\cp_474xt8gszb03h61i7w6cr8enr.argfile' 'frc.robot.Main')",
+      "PowerShell(Stop-Process *)",
+      "Bash(.\\\\gradlew.bat build *)",
+      "WebFetch(domain:shenzhen-robotics-alliance.github.io)",
+      "Bash(python tools/parse_wpilog.py logs/akit_26-05-07_17-51-04.wpilog --catalog)",
+      "PowerShell(Import-Csv *)"
     ]
   }
 }

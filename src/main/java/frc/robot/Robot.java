@@ -168,6 +168,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationInit() {
         if (System.getenv("FRC_AUTON_HEADLESS") != null) {
+            autonTypeChooser.setDefaultOption("P2PC", AutonType.P2PC);
             edu.wpi.first.wpilibj.simulation.DriverStationSim.setDsAttached(true);
             edu.wpi.first.wpilibj.simulation.DriverStationSim.setAutonomous(true);
             edu.wpi.first.wpilibj.simulation.DriverStationSim.setEnabled(true);
