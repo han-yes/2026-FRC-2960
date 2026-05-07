@@ -87,6 +87,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Orchestra orchestra = new Orchestra();
 
+    private RobotBumpSim robotBumpSim;
+
     private Optional<SwerveRequest> currentRequest = Optional.empty();
 
     private Rotation2d initialRotation = new Rotation2d();
@@ -418,6 +420,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private void startSimThread() {
         m_lastSimTime = Utils.getCurrentTimeSeconds();
 
+        robotBumpSim =
+            new RobotBumpSim(getModuleLocations());
+
         mapleSimSwerveDrivetrain = new MapleSimSwerveDrivetrain(
                 Seconds.of(kSimLoopPeriod),
                 Pounds.of(109.3),
@@ -425,7 +430,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 Constants.robotWithBumpersWidth,
                 DCMotor.getKrakenX60Foc(1),
                 DCMotor.getKrakenX44Foc(1),
-                0.8,
+                1.2,
                 getModuleLocations(),
                 getPigeon2(),
                 getModules(),
@@ -1058,6 +1063,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putData("Field2d", field);
 
         SmartDashboard.putNumber("Orbit Target Direction", orbitRequest.getTargetDirection().getDegrees());  
+    }
+
+    @Override
+    public void simulationPeriodic(){
+        Pose2d simPose =
+            mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
+
+        ChassisSpeeds fieldRelativeSpeeds = 
+            mapleSimSwerveDrivetrain.mapleSimDrive.getDriveTrainSimulatedChassisSpeedsFieldRelative();
+
+        Pose3d simPose3d =
+            robotBumpSim.update(simPose, fieldRelativeSpeeds, 1);
+        
+        if (robotBumpSim.isOnRamp()) {
+            mapleSimSwerveDrivetrain.mapleSimDrive.setSimulationWorldPose(
+                robotBumpSim.getSimWorldPose(simPose)
+            );
+        }
+
+        Logger.recordOutput("MapleSim Pose", simPose3d);
     }
 
 }

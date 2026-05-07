@@ -250,7 +250,7 @@ public class MapleSimSwerveDrivetrain {
                 .withEncoderInverted(false)
                 // Adjust steer motor PID gains for simulation
                 .withSteerMotorGains(new Slot0Configs()
-                        .withKP(70)
+                        .withKP(50)
                         .withKI(0)
                         .withKD(4.5)
                         .withKS(0)
