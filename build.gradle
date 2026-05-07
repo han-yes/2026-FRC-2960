@@ -84,8 +84,14 @@ test {
 }
 
 // Simulation configuration (e.g. environment variables).
-wpi.sim.addGui().defaultEnabled = true
+wpi.sim.addGui().defaultEnabled = project.hasProperty("enableSimGui")
 wpi.sim.addDriverstation()
+
+if (project.hasProperty("headlessAuton")) {
+    tasks.matching { it.name.contains("simulateJava") }.configureEach {
+        environment 'FRC_AUTON_HEADLESS', '1'
+    }
+}
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib

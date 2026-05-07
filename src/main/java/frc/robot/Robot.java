@@ -166,5 +166,15 @@ public class Robot extends LoggedRobot {
     public void testExit() {}
 
     @Override
+    public void simulationInit() {
+        if (System.getenv("FRC_AUTON_HEADLESS") != null) {
+            edu.wpi.first.wpilibj.simulation.DriverStationSim.setDsAttached(true);
+            edu.wpi.first.wpilibj.simulation.DriverStationSim.setAutonomous(true);
+            edu.wpi.first.wpilibj.simulation.DriverStationSim.setEnabled(true);
+            edu.wpi.first.wpilibj.simulation.DriverStationSim.notifyNewData();
+        }
+    }
+
+    @Override
     public void simulationPeriodic() {}
 }

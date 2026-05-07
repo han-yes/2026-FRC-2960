@@ -23,35 +23,49 @@ ${env:HALSIM_EXTENSIONS}=''; ${env:PATH}='C:\Users\hangy\Documents\2026-FRC-2960
 Run this in the background (it suspends until a debugger attaches on port 53338). Verify the argfile exists in `AppData\Local\Temp` before running.
 
 ### Headless Autonomous Simulation
-To run a headless auton simulation (no GUI, robot auto-enabled in autonomous mode):
+To run a headless auton simulation (no GUI, robot auto-enabled in autonomous mode).
 
-**Step 1 — suppress the GUI** in `build.gradle`:
+> **These changes are already applied in this project.** Steps 1 and 2 are only needed if setting up a fresh project.
+
+**Step 1 — update `build.gradle`** (already done):
 ```groovy
-// Change line 87 from:
-wpi.sim.addGui().defaultEnabled = true
-// To (supports optional GUI via Gradle property):
+// Suppress GUI by default; restore with -PenableSimGui
 wpi.sim.addGui().defaultEnabled = project.hasProperty("enableSimGui")
-```
+wpi.sim.addDriverstation()
 
-**Step 2 — auto-enable auton** by adding to `Robot.java`'s `simulationInit()`:
-```java
-import edu.wpi.first.wpilibj.simulation.DriverStationSim;
-
-@Override
-public void simulationInit() {
-    if (System.getenv("FRC_AUTON_HEADLESS") != null) {
-        DriverStationSim.setDsAttached(true);
-        DriverStationSim.setAutonomous(true);
-        DriverStationSim.setEnabled(true);
-        DriverStationSim.notifyNewData();
+// Pass FRC_AUTON_HEADLESS env var when -PheadlessAuton is set
+if (project.hasProperty("headlessAuton")) {
+    tasks.matching { it.name.contains("simulateJava") }.configureEach {
+        environment 'FRC_AUTON_HEADLESS', '1'
     }
 }
 ```
 
-**Step 3 — run headlessly**:
-```powershell
-${env:HALSIM_EXTENSIONS}=''; ${env:PATH}='C:\Users\hangy\Documents\2026-FRC-2960-1\build\jni\release;C:\WINDOWS\system32\'; ${env:FRC_AUTON_HEADLESS}='1'; & 'C:\Users\Public\wpilib\2026\jdk\bin\java.exe' '-agentlib:jdwp=transport=dt_socket,server=n,suspend=y,address=localhost:53338' '@C:\Users\hangy\AppData\Local\Temp\cp_474xt8gszb03h61i7w6cr8enr.argfile' 'frc.robot.Main'
+**Step 2 — add `simulationInit()` to `Robot.java`** (already done):
+```java
+@Override
+public void simulationInit() {
+    if (System.getenv("FRC_AUTON_HEADLESS") != null) {
+        edu.wpi.first.wpilibj.simulation.DriverStationSim.setDsAttached(true);
+        edu.wpi.first.wpilibj.simulation.DriverStationSim.setAutonomous(true);
+        edu.wpi.first.wpilibj.simulation.DriverStationSim.setEnabled(true);
+        edu.wpi.first.wpilibj.simulation.DriverStationSim.notifyNewData();
+    }
+}
 ```
+
+**Step 3 — run headlessly** (run in background — simulation runs indefinitely):
+```powershell
+.\gradlew.bat simulateJavaRelease -PheadlessAuton
+```
+
+To restore the GUI: `.\gradlew.bat simulateJavaRelease -PenableSimGui`
+
+**Step 4 — stop the simulation** when done:
+```powershell
+Stop-Process -Name "java" -Force
+```
+Exit code 255 after stopping is expected and not a failure.
 
 ### JUnit Unit Test Simulation (CI / deterministic time-stepping)
 For fully deterministic auton testing (no GUI, controllable clock):
@@ -115,7 +129,7 @@ Before running the simulation, determine the mode needed (interactive debug, hea
 ### Step 2: Run the Simulation
 Choose the appropriate mode:
 - **Interactive debug** → use the debug PowerShell command above, run in background
-- **Headless auton** → set `FRC_AUTON_HEADLESS=1` env var + modified `build.gradle`, run in background
+- **Headless auton** → `.\gradlew.bat simulateJavaRelease -PheadlessAuton`, run in background; stop with `Stop-Process -Name "java" -Force`
 - **Unit tests / CI** → `./gradlew test`
 
 ### Step 3: Monitor and Report Output
