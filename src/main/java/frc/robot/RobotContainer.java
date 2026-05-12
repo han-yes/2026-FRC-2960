@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,11 +28,13 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Util.AIRobotInSimulation;
 import frc.robot.commands.CommandSelector;
 import frc.robot.commands.auton.PointToPointAutons;
 import frc.robot.generated.TunerConstants;
@@ -70,6 +74,8 @@ public class RobotContainer {
     private final PointToPointAutons pointToPointAutons = new PointToPointAutons(drivetrain, indexer, intakeAngle, intakeRoller, shooterMngt, shooterWheel);
 
     private final PointToPointAutons.AutonBuilder p2pCAutons = pointToPointAutons.new AutonBuilder();
+
+    private final AIRobotInSimulation aiRobot0 = new AIRobotInSimulation(0);
     // private final Climber climber = new Climber(0, 0, TunerConstants.kCANBus, 0);
 
     // Pathplanner
@@ -179,6 +185,17 @@ public class RobotContainer {
                     (telemetryFunction) -> logger.telemeterize(telemetryFunction, false));
         }
         DriverStation.silenceJoystickConnectionWarning(true);
+
+        try{
+                RobotModeTriggers.autonomous().onTrue(
+                        new SequentialCommandGroup(
+                                aiRobot0.opponentRobotFollowPath(PathPlannerPath.fromPathFile("Sideways Top Trench to Fuel")),
+                                aiRobot0.opponentRobotFollowPath(PathPlannerPath.fromPathFile("Top Empty Fuel to Middle"))
+                        )
+                );
+        }catch(Exception e){
+                DriverStation.reportError("Failed to load opponent robot simulation paths, error: " + e.getMessage(), false);
+        }
     }
 
     /**
@@ -486,5 +503,7 @@ public class RobotContainer {
         return p2pCAutons.getAuton();
     }
     
-    
+    public Command getP2PClaudeAutonCmd(){
+        return p2pCAutons.getClaudeTestAuton(false);
+    }
 }

@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.SimulatedArena.Simulatable;
+import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
 import org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnField;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.Logger;
@@ -41,6 +42,12 @@ public class Robot extends LoggedRobot {
         P2PC
     }
 
+    private enum RobotMode{
+        REAL,
+        SIM,
+        CLAUDESIM
+    }
+
     //private final RobotContainer m_robotContainer;
     private final RobotContainer robotContainer;
 
@@ -50,6 +57,8 @@ public class Robot extends LoggedRobot {
     //     .withJoystickReplay();
 
     private final SendableChooser<AutonType> autonTypeChooser = new SendableChooser<>();
+
+    private final RobotMode currentMode = RobotMode.CLAUDESIM;
 
     public Robot() {
         Logger.recordMetadata("ProjectName", "MyProject"); // Set a metadata value
@@ -84,10 +93,6 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         // m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run(); 
-
-        Pose3d[] fuelPoses = SimulatedArena.getInstance()
-            .getGamePiecesArrayByType("Fuel");
-        Logger.recordOutput("FieldSimulation/FuelPositions", fuelPoses);
         
         SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
         SmartDashboard.putBoolean("Won Auton", MatchPeriodTracking.allianceWonAuton());
@@ -128,6 +133,10 @@ public class Robot extends LoggedRobot {
             default:
                 m_autonomousCommand = Commands.none();
                 break;
+        }
+
+        if (isSimulation() && currentMode == RobotMode.CLAUDESIM){
+            m_autonomousCommand = robotContainer.getP2PClaudeAutonCmd();
         }
 
         if (m_autonomousCommand != null) {
@@ -177,5 +186,8 @@ public class Robot extends LoggedRobot {
     }
 
     @Override
-    public void simulationPeriodic() {}
+    public void simulationPeriodic() {
+        Logger.recordOutput("FieldSimulation/Fuel", 
+            SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+    }
 }

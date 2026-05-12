@@ -60,6 +60,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.FieldLayout;
+import frc.robot.Robot;
 import frc.robot.Util.GeomUtil;
 import frc.robot.Util.CustomSwerveRequests.FieldCentricCircularOrbit;
 import frc.robot.Util.CustomSwerveRequests.FieldCentricGoToPoint;
@@ -426,10 +427,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         mapleSimSwerveDrivetrain = new MapleSimSwerveDrivetrain(
                 Seconds.of(kSimLoopPeriod),
                 Pounds.of(109.3),
-                Constants.robotWithBumpersLength,
-                Constants.robotWithBumpersWidth,
+                Constants.robotLength,
+                Constants.robotWidth,
                 DCMotor.getKrakenX60Foc(1),
-                DCMotor.getKrakenX44Foc(1),
+                DCMotor.getFalcon500(1),
                 1.2,
                 getModuleLocations(),
                 getPigeon2(),
@@ -551,7 +552,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @AutoLogOutput
     public Pose2d getPose2d() {
-        return this.getState().Pose;
+        if (Robot.isReal()){
+            return getState().Pose;
+        }else{
+            return mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
+        }
     }
 
     @AutoLogOutput
@@ -583,7 +588,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public void resetPose(Pose2d pose) {
         if (this.mapleSimSwerveDrivetrain != null) mapleSimSwerveDrivetrain.mapleSimDrive.setSimulationWorldPose(pose);
-        Timer.delay(0.1); // wait for simulation to update
+        Timer.delay(0.05); // wait for simulation to update
         super.resetPose(pose);
     }
 
@@ -1067,22 +1072,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void simulationPeriodic(){
-        Pose2d simPose =
-            mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
-
-        ChassisSpeeds fieldRelativeSpeeds = 
-            mapleSimSwerveDrivetrain.mapleSimDrive.getDriveTrainSimulatedChassisSpeedsFieldRelative();
-
-        Pose3d simPose3d =
-            robotBumpSim.update(simPose, fieldRelativeSpeeds, 1);
-        
-        if (robotBumpSim.isOnRamp()) {
-            mapleSimSwerveDrivetrain.mapleSimDrive.setSimulationWorldPose(
-                robotBumpSim.getSimWorldPose(simPose)
-            );
-        }
-
-        Logger.recordOutput("MapleSim Pose", simPose3d);
+        Logger.recordOutput("MapleSim Pose3d", mapleSimSwerveDrivetrain.getPose3d());
     }
 
 }

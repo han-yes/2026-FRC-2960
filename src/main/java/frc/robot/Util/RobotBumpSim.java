@@ -18,6 +18,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import frc.robot.generated.TunerConstants;
 
 /**
  * RobotBumpSim — standalone robot-bump physics simulation for MapleSim.
@@ -89,7 +90,7 @@ public class RobotBumpSim {
     // -------------------------------------------------------------------------
 
     /** Robot control-loop period (seconds). Matches the WPILib default of 20 ms. */
-    private static final double PERIOD = 0.02;
+    private static final double PERIOD = 0.004;
 
     /** Gravitational acceleration vector (m/s², pointing in the -Z direction). */
     private static final Translation3d GRAVITY = new Translation3d(0, 0, -9.81);
@@ -160,7 +161,7 @@ public class RobotBumpSim {
     private static final double WHEEL_RADIUS = Inches.of(1.75).in(Meters);
 
     /** Height offset from the average module-contact Z to the robot-body origin (metres). */
-    private static final double CHASSIS_HEIGHT = Inches.of(3).in(Meters);
+    private static final double CHASSIS_HEIGHT = Inches.of(0).in(Meters);
 
     /**
      * Coefficient of restitution for vertical (Z) robot-bump collisions.

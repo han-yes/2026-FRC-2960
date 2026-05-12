@@ -22,13 +22,21 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.generated.TunerConstants;
 
+import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -36,6 +44,8 @@ import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.ironmaple.simulation.motorsims.SimulatedBattery;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
+import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
+import org.littletonrobotics.junction.Logger;
 
 /**
  *
@@ -51,6 +61,13 @@ public class MapleSimSwerveDrivetrain {
     private final Pigeon2SimState pigeonSim;
     private final SimSwerveModule[] simModules;
     public final SwerveDriveSimulation mapleSimDrive;
+    public final RobotBumpSim robotBumpSim;
+    public final IntakeSimulation intakeSim;
+    private Pose3d simPose3d = new Pose3d();
+
+    StructPublisher<Pose3d> robotBumpSimPose = NetworkTableInstance.getDefault()
+        .getStructTopic("MapleSim Pose3d", Pose3d.struct)
+        .publish();
 
     /**
      *
@@ -107,8 +124,14 @@ public class MapleSimSwerveDrivetrain {
         for (int i = 0; i < this.simModules.length; i++)
             simModules[i] = new SimSwerveModule(moduleConstants[0], moduleSimulations[i], modules[i]);
 
+        SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
         SimulatedArena.overrideSimulationTimings(simPeriod, 1);
         SimulatedArena.getInstance().addDriveTrainSimulation(mapleSimDrive);
+
+        robotBumpSim = new RobotBumpSim(moduleLocations);
+        intakeSim = IntakeSimulation.OverTheBumperIntake("Fuel", mapleSimDrive, Inches.of(24.75), Inches.of(8.411), IntakeSide.FRONT, 90);
+        intakeSim.register(SimulatedArena.getInstance());
+        intakeSim.startIntake();
     }
 
     /**
@@ -125,6 +148,28 @@ public class MapleSimSwerveDrivetrain {
                 mapleSimDrive.getSimulatedDriveTrainPose().getRotation().getMeasure());
         pigeonSim.setAngularVelocityZ(RadiansPerSecond.of(
                 mapleSimDrive.getDriveTrainSimulatedChassisSpeedsRobotRelative().omegaRadiansPerSecond));
+
+        Pose2d simPose = mapleSimDrive.getSimulatedDriveTrainPose();
+
+        ChassisSpeeds fieldRelativeSpeeds =
+            mapleSimDrive.getDriveTrainSimulatedChassisSpeedsFieldRelative();
+
+        simPose3d = robotBumpSim.update(simPose, fieldRelativeSpeeds, 1);
+
+        if (robotBumpSim.isOnRamp()) {
+            mapleSimDrive.setSimulationWorldPose(
+                robotBumpSim.getSimWorldPose(simPose)
+            );
+        }
+
+        robotBumpSimPose.set(simPose3d);
+
+        SmartDashboard.putBoolean("On Ramp", robotBumpSim.isOnRamp());
+    }
+
+    
+    public Pose3d getPose3d(){
+        return simPose3d;
     }
 
     /**
@@ -250,7 +295,7 @@ public class MapleSimSwerveDrivetrain {
                 .withEncoderInverted(false)
                 // Adjust steer motor PID gains for simulation
                 .withSteerMotorGains(new Slot0Configs()
-                        .withKP(50)
+                        .withKP(70)
                         .withKI(0)
                         .withKD(4.5)
                         .withKS(0)

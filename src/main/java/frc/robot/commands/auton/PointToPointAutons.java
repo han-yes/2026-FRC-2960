@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants;
 import frc.robot.FieldLayout;
+import frc.robot.Robot;
 import frc.robot.Util.WaypointFactory;
 import frc.robot.Util.WaypointFactory.AllianceFlip;
 import frc.robot.Util.WaypointFactory.Waypoint;
@@ -460,6 +461,7 @@ public final class PointToPointAutons {
                 endTypeChooser.addOption("Corner", EndType.CORNER);
                 endTypeChooser.addOption("Hub", EndType.HUB);
 
+
                 // SmartDashboard.putData("Start Type P2PC", startTypeChooser);
                 // SmartDashboard.putData("Neutral Zone P2PC", neutralZoneChooser);
                 // SmartDashboard.putData("Intake Path P2PC", intakePathChooser);
@@ -627,6 +629,16 @@ public final class PointToPointAutons {
 
         public Command getShootRoutineCmd(int cycle){
             return getShootRoutine(shootTimeList.get(cycle).getDouble(4));
+        }
+
+        public Command getClaudeTestAuton(boolean mirror){
+            return new SequentialCommandGroup(
+                drivetrain.getResetPoseAllianceCmd(AutonWaypoints.rightTrenchAutonStart),
+                getTrenchNeutralZone(mirror, false),
+                getSnakeIntakePath(mirror, ReturnType.BUMP),
+                getReturnBumperRoutine(mirror),
+                getShootRoutine(4)
+            );
         }
 
         public Command getAuton(){

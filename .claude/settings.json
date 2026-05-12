@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Claude can run any python scipt in the tools folder when necessary.",
+      "Claude can run run robot simulation when necessary."
+    ]
+  }
+}
